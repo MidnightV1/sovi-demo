@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Sovi - 对话</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="chat-page">
+    <!-- 主容器 -->
+    <div class="chat-container">
+        <!-- 顶部操作栏 -->
+        <div class="top-bar">
+            <button class="btn-secondary" id="history-btn">
+                📋 对话记录
+            </button>
+            <div class="top-spacer"></div>
+            <button class="btn-secondary" id="new-chat-btn">
+                ✨ 新对话
+            </button>
+        </div>
+        
+        <!-- 历史侧栏遮罩 -->
+        <div class="history-overlay" id="history-overlay"></div>
+        
+        <!-- 历史对话侧栏（隐藏状态）-->
+        <div class="history-sidebar" id="history-sidebar">
+            <div class="history-header">
+                <h3>📋 对话记录</h3>
+                <button class="close-btn" id="close-history">✕</button>
+            </div>
+            <div class="history-list" id="history-list">
+                {% for conv in conversations %}
+                <div class="history-item" data-conv-id="{{ conv.conversation_id }}">
+                    <div class="history-content">
+                        <div class="history-title">{{ conv.title }}</div>
+                        <div class="history-time" data-utc-time="{{ conv.created_at if conv.created_at and conv.created_at is string else (conv.created_at.isoformat() if conv.created_at else '') }}">
+                            {% if conv.created_at %}
+                                {% if conv.created_at is string %}
+                                    {{ conv.created_at }}
+                                {% else %}
+                                    {{ conv.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% endif %}
+                            {% else %}
+                                未知时间
+                            {% endif %}
+                        </div>
+                    </div>
+                    <button class="delete-btn" data-conv-id="{{ conv.conversation_id }}" title="删除对话">删除</button>
+                </div>
+                {% endfor %}
+                {% if not conversations %}
+                <div class="no-history">暂无对话记录</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 聊天消息区域 -->
+        <div class="messages-area" id="messages-area">
+            <div class="messages-container" id="messages-container">
+                {% for message in messages %}
+                <div class="message {{ 'user' if message.role == 'user' else 'assistant' }}">
+                    <div class="message-bubble">
+                        {% if message.image_url and message.role == 'user' %}
+                        <div class="message-image">
+                            <img src="{{ message.image_url }}" 
+                                 alt="用户上传的图片" 
+                                 onclick="showImageModal(this)"
+                                 onerror="handleImageError(this)"
+                                 loading="lazy"
+                                 data-original-src="{{ message.image_url }}">
+                        </div>
+                        {% endif %}
+                        <div class="message-header">
+                            <span class="message-role">
+                                {{ '你' if message.role == 'user' else 'Sovi' }}
+                            </span>
+                        </div>
+                        <div class="message-content" data-original-content="{{ (message.content or message.view_content or message.origin_content) | e }}">{{ (message.content or message.view_content or message.origin_content) | format_message | safe }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+            </div>
+        </div>
+        
+        <!-- 底部输入区域 -->
+        <div class="input-area">
+            <!-- 图片处理状态提示 -->
+            <div class="image-processing" id="image-processing" style="display: none;">
+                <div class="processing-content">
+                    <div class="processing-spinner"></div>
+                    <div class="processing-text">正在处理图片...</div>
+                    <div class="processing-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="processing-progress-fill"></div>
+                        </div>
+                        <div class="progress-text" id="processing-progress-text">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图片上传预览（隐藏）-->
+            <div class="image-preview" id="image-preview" style="display: none;">
+                <div class="preview-container">
+                    <img id="preview-image" src="" alt="预览">
+                    <div class="preview-info">
+                        <div class="image-meta" id="image-meta"></div>
+                        <button class="remove-image" id="remove-image" title="移除图片">✕</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 移动端图片上传选择菜单 -->
+            <div class="upload-menu-overlay" id="upload-menu-overlay" style="display: none;">
+                <div class="upload-menu">
+                    <div class="upload-menu-header">选择上传方式</div>
+                    <div class="upload-menu-options">
+                        <button class="upload-menu-option" id="camera-option">
+                            <span class="option-icon">📷</span>
+                            <span class="option-text">拍照上传</span>
+                        </button>
+                        <button class="upload-menu-option" id="file-option">
+                            <span class="option-icon">📁</span>
+                            <span class="option-text">文件上传</span>
+                        </button>
+                    </div>
+                    <button class="upload-menu-cancel" id="upload-menu-cancel">取消</button>
+                </div>
+            </div>
+
+            <div class="input-bar" id="input-bar">
+                <!-- 图片上传选项 -->
+                <div class="upload-options">
+                    <button class="upload-btn" id="image-upload-btn" title="上传图片">
+                        +
+                    </button>
+                    <!-- 隐藏的文件输入 -->
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                    <input type="file" id="camera-upload" accept="image/*" capture="environment" style="display: none;">
+                </div>
+                
+                <div class="text-input-wrapper" id="text-input-wrapper">
+                    <div class="input-container">
+                        <textarea id="message-input" placeholder="有什么想聊的？支持拖拽图片到此处" rows="1" maxlength="800"></textarea>
+                        <div class="char-count" id="char-count">0/800</div>
+                    </div>
+                </div>
+                
+                <button class="send-btn" id="send-btn" disabled>发送</button>
+            </div>
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <button class="nav-btn active" data-page="chat">
+                💬 对话
+            </button>
+            <button class="nav-btn" data-page="profile">
+                👤 个人中心
+            </button>
+        </div>
+    </div>
+
+    <!-- 划词追问：底部输入面板 -->
+    <div class="followup-input-sheet" id="followup-input-sheet" aria-hidden="true">
+        <div class="followup-sheet-header">
+            <div class="followup-sheet-title">追问</div>
+            <button class="followup-close-btn" id="followup-close-btn" title="关闭" aria-label="关闭">✕</button>
+        </div>
+        <div class="followup-quote-section">
+            <div class="followup-quote-label">引用</div>
+            <div class="followup-quote-text" id="followup-quote-text"></div>
+        </div>
+        <div class="followup-input-section">
+            <textarea class="followup-textarea" id="followup-textarea" placeholder="请输入你的追问..." rows="3" maxlength="600"></textarea>
+        </div>
+        <div class="followup-actions">
+            <button class="followup-btn followup-btn-cancel" id="followup-cancel-btn">取消</button>
+            <button class="followup-btn followup-btn-send" id="followup-send-btn" disabled>发送</button>
+        </div>
+    </div>
+    
+    <!-- Loading 提示 -->
+    <div class="loading-overlay" id="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">AI正在思考...</div>
+    </div>
+    
+    <div id="bootstrap-data" 
+        data-current-conv-id="{{ current_conv_id if current_conv_id is not none else '' }}"
+        data-username="{{ username }}"
+        data-user-id="{{ user_id }}"></div>
+    <!-- 第三方库：Markdown & 数学公式渲染 -->
+    <!-- 尝试多个CDN源确保加载成功 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" 
+          onerror="this.onerror=null;this.href='https://unpkg.com/katex@0.16.9/dist/katex.min.css';">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" 
+            onerror="this.onerror=null;var script=document.createElement('script');script.src='https://unpkg.com/katex@0.16.9/dist/katex.min.js';document.head.appendChild(script);"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" 
+            onerror="this.onerror=null;var script=document.createElement('script');script.src='https://unpkg.com/katex@0.16.9/dist/contrib/auto-render.min.js';document.head.appendChild(script);"></script>
+    
+    <script>
+        // 等待所有资源加载完成后再初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM加载完成，开始初始化...');
+            
+            const bootstrapEl = document.getElementById('bootstrap-data');
+            // 确保conversation_id转换为整数类型，与数据库保持一致
+            const rawConvId = bootstrapEl.getAttribute('data-current-conv-id');
+            window.currentConvId = rawConvId ? parseInt(rawConvId, 10) : null;
+            window.username = bootstrapEl.getAttribute('data-username') || '';
+            window.userId = parseInt(bootstrapEl.getAttribute('data-user-id'), 10) || null;
+            
+            console.log('📋 用户信息加载:', { userId: window.userId, username: window.username });
+            
+            // 检查KaTeX库加载状态
+            console.log('📚 检查KaTeX库:', {
+                katex: typeof katex !== 'undefined' ? '✅已加载' : '❌未加载',
+                renderMathInElement: typeof renderMathInElement !== 'undefined' ? '✅已加载' : '❌未加载'
+            });
+            
+            // KaTeX 自动渲染配置函数
+            window.renderMathInElementSafe = function(el){
+                console.log('🔧 调用LaTeX渲染，目标元素:', el);
+                
+                if (typeof renderMathInElement !== 'function') {
+                    console.warn('⚠️ renderMathInElement 函数未加载');
+                    return false;
+                }
+                
+                try {
+                    renderMathInElement(el, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false},
+                            {left: '\\(', right: '\\)', display: false},
+                            {left: '\\[', right: '\\]', display: true}
+                        ],
+                        throwOnError: false
+                    });
+                    console.log('✅ KaTeX渲染成功完成');
+                    return true;
+                } catch(e) { 
+                    console.error('❌ KaTeX渲染错误:', e);
+                    return false;
+                }
+            }
+            
+            console.log('✅ 页面初始化完成');
+            
+            // 测试渲染函数是否工作
+            setTimeout(function() {
+                console.log('🧪 5秒后测试渲染函数...');
+                if (window.renderMathInElementSafe) {
+                    // 创建一个测试元素
+                    const testDiv = document.createElement('div');
+                    testDiv.innerHTML = '测试公式: $E = mc^2$';
+                    testDiv.style.position = 'absolute';
+                    testDiv.style.top = '-1000px';
+                    document.body.appendChild(testDiv);
+                    
+                    const result = window.renderMathInElementSafe(testDiv);
+                    console.log('🧪 测试结果:', result ? '成功' : '失败');
+                    
+                    document.body.removeChild(testDiv);
+                }
+            }, 5000);
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/timeFormatter.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/welcomeCache.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/imageProcessor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</body>
+</html>

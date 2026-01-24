@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - Sovi Demo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="profile-page">
+    <div class="profile-container">
+        <!-- 主要内容 -->
+        <div class="profile-main">
+            <div class="profile-card">
+                <!-- 用户信息 -->
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <div class="avatar-icon">👤</div>
+                    </div>
+                    <h1 class="greeting">你好, {{ username }}</h1>
+                    <p class="welcome-subtitle">感谢体验 Sovi Demo</p>
+                </div>
+                
+                <!-- 统计信息 -->
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ conversation_count }}</div>
+                        <div class="stat-label">对话数量</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ message_count }}</div>
+                        <div class="stat-label">发送消息数</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 退出登录按钮 -->
+        <div class="profile-footer">
+            <button class="logout-btn" id="logout-btn">
+                退出登录
+            </button>
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <button class="nav-btn" data-page="chat">
+                💬 对话
+            </button>
+            <button class="nav-btn active" data-page="profile">
+                👤 个人中心
+            </button>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+</body>
+</html>

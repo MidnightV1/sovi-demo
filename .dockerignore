@@ -1,0 +1,57 @@
+# Git相关
+.git
+.github
+
+# Python缓存
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+build
+*.egg-info
+.cache
+
+# 环境文件
+.env
+.env.local
+.env.development
+.env.production
+
+# 本地数据库
+*.db
+sovi_demo.db
+
+# 临时文件
+temp_image_storage/
+*.log
+*.tmp
+
+# 开发文件
+.vscode
+.idea
+*.swp
+*.swo
+
+# 测试文件
+test_*.py
+*_test.py
+
+# 文档
+*.md
+PROJECT_STATUS.md
+
+# 部署脚本
+deploy.sh
+init_db.sh
+
+# 服务账户密钥（应通过环境变量传入）
+gcp-service-account.json
+service-account-key.json
+
+# 其他无用文件
+.DS_Store
+Thumbs.db
+
+# 备份文件
+.bak

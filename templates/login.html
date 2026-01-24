@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovi - 智能学习助手</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>📚 Sovi</h1>
+                <p>智能学习助手</p>
+            </div>
+            
+            <!-- 统一登录/注册表单 -->
+            <div class="auth-form-container">
+                <form id="auth-form" class="auth-form">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="auth-username" name="username" required 
+                               placeholder="输入用户名（3-20个字符）">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="auth-password" name="password" required 
+                               placeholder="输入密码（6位以上）">
+                    </div>
+                    <button type="submit" class="btn-primary">🚀 开始体验</button>
+                    
+                    <div id="message" class="message"></div>
+                    <!-- 体验说明 -->
+                    <div class="experience-note">
+                        <div class="features">
+                            <div class="feature-item">📸 拍照解题 - 秒解全科难题</div>
+                            <div class="feature-item">💬 智能对话 - 随心深度交流 </div>
+                            <div class="feature-item">🎯 个性进化 - 越用越懂你</div>
+                        </div>
+                        <div class="demo-disclaimer">
+                            <p>* 首次使用将自动创建体验账户</p>
+                            <p>* 本系统仅供功能体验，数据不会永久保存</p>
+                            <p>* vibe coding产物，如遇体验问题敬请谅解</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+</html>

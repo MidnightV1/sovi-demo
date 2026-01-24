@@ -1,0 +1,41 @@
+# Flask Web应用框架
+Flask==2.3.3
+Flask-CORS==4.0.0
+Jinja2>=3.1.2
+Werkzeug>=2.3.7
+
+# 生产部署服务器
+gunicorn>=21.2.0
+gevent>=23.7.0
+
+# Google Cloud服务
+google-cloud-secret-manager>=2.16.0
+google-cloud-storage>=2.10.0
+google-genai>=0.3.0
+
+# 数据库相关
+sqlalchemy>=2.0.0
+pg8000>=1.29.0
+psycopg2-binary>=2.9.0
+
+# 安全相关
+bcrypt>=4.0.0
+
+# 图像处理
+Pillow>=10.0.0
+
+# 本地开发工具
+python-dotenv>=1.0.0
+
+# 数据处理 (可选，AI模型处理需要)
+pandas>=2.0.0
+numpy>=1.24.0
+
+# 时间处理
+python-dateutil>=2.8.2
+
+# HTTP客户端 (Gemini API调用)
+requests>=2.31.0
+
+# JSON处理增强
+ujson>=5.8.0
