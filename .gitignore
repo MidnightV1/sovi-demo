@@ -150,6 +150,8 @@ local_data/
 # IDE files
 .vscode/
 .idea/
+.claude/
+.cursor/
 *.swp
 *.swo
 *~
